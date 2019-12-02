@@ -1,4 +1,7 @@
 {
+    "php": {
+        "version": "7.3"
+    },
     "platformsh/config-reader": {
         "version": "2.3.1"
     },
