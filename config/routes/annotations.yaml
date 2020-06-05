@@ -1,0 +1,11 @@
+controllers:
+    resource: ../../src/Controller/
+    type: annotation
+
+swappsystem_controllers:
+    resource: ../../src/SWAppsystem/Controller/
+    type: annotation
+
+kernel:
+    resource: ../../src/Kernel.php
+    type: annotation

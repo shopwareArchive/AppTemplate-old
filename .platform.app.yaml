@@ -12,8 +12,10 @@ build:
 variables:
     env:
         # Tell Symfony to always install in production-mode.
-        APP_ENV: 'prod'
+        APP_ENV: 'env'
         APP_DEBUG: 0
+        APP_NAME: 'SwagApp'
+        APP_SECRET: 's3cr3t'
 
 # The hooks that will be performed when the package is deployed.
 hooks:
