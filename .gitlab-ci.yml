@@ -1,0 +1,18 @@
+image: composer:latest
+
+stages:
+  - Static analysis
+  - Unit
+
+EasyCodingStandard:
+  stage: Static analysis
+  script:
+    - composer install --no-suggest --no-progress
+    - vendor/bin/ecs check
+
+Unit:
+  stage: Unit
+  script:
+    - composer install --no-suggest --no-progress
+    - composer dump-autoload
+    - vendor/bin/phpunit

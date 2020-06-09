@@ -2,8 +2,8 @@ controllers:
     resource: ../../src/Controller/
     type: annotation
 
-swappsystem_controllers:
-    resource: ../../src/SWAppsystem/Controller/
+swagappsystem_controllers:
+    resource: ../../src/SwagAppsystem/Controller/
     type: annotation
 
 kernel:

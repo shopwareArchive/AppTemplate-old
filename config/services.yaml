@@ -23,8 +23,8 @@ services:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
 
-    App\SWAppsystem\Controller\:
-        resource: '../src/SWAppsystem/Controller'
+    App\SwagAppsystem\Controller\:
+        resource: '../src/SwagAppsystem/Controller'
         tags: ['controller.service_arguments']
 
     # add more service definitions when explicit configuration is needed
