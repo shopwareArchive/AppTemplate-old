@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
-
-namespace App\SWAppsystem\Controller;
-
+namespace App\SwagAppsystem\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,10 +12,11 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class Registration extends AbstractController
 {
     //TODO implement the registration correctly once https://jira.shopware.com/browse/SAAS-990 is done
+
     /**
      * @Route("/registration", name="register", methods={"GET"})
      */
-    public function register(Request $request): Response
+    public function register(Request $request): JsonResponse
     {
         $shopUrl = $this->getShopUrl($request);
         $secret = getenv('APP_SECRET');
@@ -25,7 +24,7 @@ class Registration extends AbstractController
 
         $proof = \hash_hmac('sha256', $shopUrl . $name, $secret);
 
-        $body = ['proof' => $proof, 'secret' => 'bla', 'confirmation_url' => $this->generateUrl('confirm', [], UrlGeneratorInterface::ABSOLUTE_URL)];
+        $body = ['proof' => $proof, 'secret' => $secret, 'confirmation_url' => $this->generateUrl('confirm', [], UrlGeneratorInterface::ABSOLUTE_URL)];
 
         return new JsonResponse($body);
     }
@@ -40,6 +39,6 @@ class Registration extends AbstractController
 
     private function getShopUrl(Request $request): string
     {
-        return $request->query->get('shop');
+        return $request->query->get('shop-url');
     }
 }

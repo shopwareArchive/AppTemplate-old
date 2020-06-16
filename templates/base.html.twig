@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta
+        charset="UTF-8"
+    >
+    <title>{% block title %}Welcome!{% endblock %}</title>
+    {% block stylesheets %}{% endblock %}
+</head>
+<body
+    onload="sendReadyState()"
+>
+{% block body %}{% endblock %}
+{% block javascripts %}{% endblock %}
+<script>
+    function sendReadyState() {
+        window.parent.postMessage('connect-app-loaded', '*');
+    }
+</script>
+</body>
+</html>
