@@ -62,3 +62,8 @@ To deploy your app on [platform.sh](platform.sh) just follow the instructions:
 * [Public GitHub repository](https://docs.platform.sh/integrations/source/github.html)
 * [Private GitHub repository](https://docs.platform.sh/development/private-repository.html)
 * [Using the Platform.sh CLI](https://github.com/platformsh/platformsh-cli)
+
+After the deployment you can use the [Plaform.sh CLI]((https://github.com/platformsh/platformsh-cli)) to set up the database.
+First ssh to your server: `platform ssh`  
+Then run the migrations: `vendor/bin/doctrine-migrations migrations:migrate`  
+That's is. Your server is running and you can start developing your own app. 
