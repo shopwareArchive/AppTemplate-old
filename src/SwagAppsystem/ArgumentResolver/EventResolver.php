@@ -2,6 +2,8 @@
 
 namespace App\SwagAppsystem\ArgumentResolver;
 
+use App\Repository\ShopRepository;
+use App\SwagAppsystem\Authenticator;
 use App\SwagAppsystem\Event;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentValueResolverInterface;
@@ -9,6 +11,16 @@ use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 
 class EventResolver implements ArgumentValueResolverInterface
 {
+    /**
+     * @var ShopRepository
+     */
+    private $shopRepository;
+
+    public function __construct(ShopRepository $shopRepository)
+    {
+        $this->shopRepository = $shopRepository;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -18,21 +30,39 @@ class EventResolver implements ArgumentValueResolverInterface
             return false;
         }
 
-        $requestContent = json_decode($request->getContent(), true);
-
-        if ($requestContent && array_key_exists('source', $requestContent) && array_key_exists('data', $requestContent)) {
-            $requiredKeys = ['url', 'appVersion', 'apiKey', 'secretKey'];
-
-            foreach ($requiredKeys as $key) {
-                if (!array_key_exists($key, $requestContent['source'])) {
-                    return false;
-                }
-            }
-
-            return true;
+        if ($request->getMethod() !== 'POST') {
+            return false;
         }
 
-        return false;
+        $requestContent = json_decode($request->getContent(), true);
+
+        if (!$requestContent) {
+            return false;
+        }
+
+        $hasSource = array_key_exists('source', $requestContent);
+        $hasData = array_key_exists('data', $requestContent);
+        $hasSourceAndData = $hasSource && $hasData;
+
+        if (!$hasSourceAndData) {
+            return false;
+        }
+
+        $requiredKeys = ['url', 'appVersion', 'shopId'];
+
+        foreach ($requiredKeys as $key) {
+            if (!array_key_exists($key, $requestContent['source'])) {
+                return false;
+            }
+        }
+
+        $shopSecret = $this->shopRepository->getSecretByShopId($requestContent['source']['shopId']);
+
+        if (!Authenticator::authenticatePostRequest($request, $shopSecret)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -43,11 +73,10 @@ class EventResolver implements ArgumentValueResolverInterface
         $requestContent = json_decode($request->getContent(), true);
 
         $shopUrl = $requestContent['source']['url'];
-        $appVersion = $requestContent['source']['appVersion'];
-        $key = $requestContent['source']['apiKey'];
-        $secretKey = $requestContent['source']['secretKey'];
+        $shopId = $requestContent['source']['shopId'];
+        $appVersion = (int) $requestContent['source']['appVersion'];
         $eventData = $requestContent['data'];
 
-        yield new Event($shopUrl, $appVersion, $key, $secretKey, $eventData);
+        yield new Event($shopUrl, $shopId, $appVersion, $eventData);
     }
 }

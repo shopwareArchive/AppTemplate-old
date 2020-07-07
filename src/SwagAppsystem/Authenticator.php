@@ -7,6 +7,7 @@ use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
+use Symfony\Component\HttpFoundation\Request;
 
 class Authenticator
 {
@@ -40,5 +41,44 @@ class Authenticator
         $token = json_decode($authResponse->getBody()->getContents(), true)['access_token'];
 
         return $credentials->withToken($token);
+    }
+
+    public static function authenticateRegisterRequest(Request $request): bool
+    {
+        $signature = $request->headers->get('shopware-app-signature');
+        $queryString = $request->getQueryString();
+
+        $hmac = \hash_hmac('sha256', $queryString, getenv('APP_SECRET'));
+
+        return hash_equals($hmac, $signature);
+    }
+
+    public static function authenticatePostRequest(Request $request, string $shopSecret): bool
+    {
+        if (!array_key_exists('shopware-shop-signature', $request->headers->all())) {
+            return false;
+        }
+
+        $signature = $request->headers->get('shopware-shop-signature');
+
+        $hmac = \hash_hmac('sha256', $request->getContent(), $shopSecret);
+
+        return hash_equals($hmac, $signature);
+    }
+
+    public static function authenticateGetRequest(Request $request, string $shopSecret): bool
+    {
+        $query = $request->query->all();
+
+        $queryString = sprintf(
+            'shop-id=%s&shop-url=%s&timestamp=%s',
+            $query['shop-id'],
+            urlencode($query['shop-url']),
+            $query['timestamp']
+        );
+
+        $hmac = \hash_hmac('sha256', $queryString, $shopSecret);
+
+        return hash_equals($hmac, $query['shopware-shop-signature']);
     }
 }

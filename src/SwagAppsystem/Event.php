@@ -10,31 +10,25 @@ class Event
     private $shopUrl;
 
     /**
+     * @var string
+     */
+    private $shopId;
+
+    /**
      * @var int
      */
     private $appVersion;
-
-    /**
-     * @var string
-     */
-    private $key;
-
-    /**
-     * @var string
-     */
-    private $secretKey;
 
     /**
      * @var array
      */
     private $eventData;
 
-    public function __construct(string $shopUrl, string $appVersion, string $key, string $secretKey, array $eventData)
+    public function __construct(string $shopUrl, string $shopId, int $appVersion, array $eventData)
     {
         $this->shopUrl = $shopUrl;
+        $this->shopId = $shopId;
         $this->appVersion = $appVersion;
-        $this->key = $key;
-        $this->secretKey = $secretKey;
         $this->eventData = $eventData;
     }
 
@@ -43,19 +37,14 @@ class Event
         return $this->shopUrl;
     }
 
-    public function getAppVersion(): string
+    public function getShopId(): string
+    {
+        return $this->shopId;
+    }
+
+    public function getAppVersion(): int
     {
         return $this->appVersion;
-    }
-
-    public function getKey(): string
-    {
-        return $this->key;
-    }
-
-    public function getSecretKey(): string
-    {
-        return $this->secretKey;
     }
 
     public function getEventData(): array
