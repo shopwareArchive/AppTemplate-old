@@ -47,6 +47,53 @@ class OrderController
 
 In there you can use the `$client` to communicate with the shop or use the `$event` to get the data.
 
+##App lifecycle events
+
+There are five app lifecycle events which can be triggered during the lifecycle of an app.  
+The events are `app_installed`, `app_updated`, `app_deleted`, `app_activated` and `app_deactivated`.
+To use this events you have to create the webhooks in your manifest.  
+If you want to implement your own code you only need to implement the [AppLifecycleHandler](src/SwagAppsystem/AppLifecycleHandler.php) interface and write your own code.  
+
+The `app_installed` event gets triggered each time the app gets installed.  
+This will also trigger the `app_activated` event.  
+At each of this both events the shop is already installed and registered at your app.  
+The webhook could look like this:
+
+```xml
+<webhook name="appLifecycleInstalled" url="https://your-shop-url/applifecycle/installed" event="app_installed"/>
+```
+
+The `app_updated` event gets triggered each time a shop updated your app.  
+The webhook could look like this:
+
+```xml
+<webhook name="appLifecycleUpdated" url="https://your-shop-url/applifecycle/updated" event="app_updated"/>
+```
+
+The `app_deleted` event gets triggered each time a shop deletes your app.  
+At this point the shop is deleted using the [shopRepository](src/Repository/ShopRepository.php).  
+You should delete all shop data you have saved and stop the communication with the shop.  
+The webhook could look like this:
+
+```xml
+<webhook name="appLifecycleDeleted" url="https://your-shop-url/applifecycle/deleted" event="app_deleted"/>
+```
+
+The `app_activated` event gets triggered each time your app gets installed or activated.  
+At this point you can start the communication with the shop.  
+The webhook could look like this:
+```xml
+<webhook name="appLifecycleActivated" url="https://your-shop-url/applifecycle/activated" event="app_activated"/>
+```
+
+The `app_deactivated` event gets triggered each time your app gets deactivated.  
+At this point you should stop the communication with the shop.  
+The webhook could look like this:
+
+```xml
+<webhook name="appLifecycleDeactivated" url="https://your-shop-url/applifecycle/deactivated" event="app_deactivated"/>
+```
+
 ##Testing
 
 To test your app you can use [PHPUnit](https://phpunit.de/index.html)  
