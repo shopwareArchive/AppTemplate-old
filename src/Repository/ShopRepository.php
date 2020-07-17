@@ -20,7 +20,8 @@ class ShopRepository
     public function updateAccessKeysForShop(string $shopId, string $apiKey, string $secretKey): void
     {
         $queryBuilder = $this->connection->createQueryBuilder();
-        $queryBuilder->update('shop')
+        $queryBuilder
+            ->update('shop')
             ->set('api_key', ':api_key')
             ->set('secret_key', ':secret_key')
             ->where('shop_id = :shop_id')
@@ -41,6 +42,16 @@ class ShopRepository
             ->setParameter('shop_id', $shopId)
             ->setParameter('shop_url', $shopUrl)
             ->setParameter('shop_secret', $shopSecret);
+        $queryBuilder->execute();
+    }
+
+    public function removeShop(string $shopId): void
+    {
+        $queryBuilder = $this->connection->createQueryBuilder();
+        $queryBuilder
+            ->delete('shop')
+            ->where('shop_id = :shop_id')
+            ->setParameter('shop_id', $shopId);
         $queryBuilder->execute();
     }
 

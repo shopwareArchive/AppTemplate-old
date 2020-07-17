@@ -27,6 +27,11 @@ services:
         resource: '../src/SwagAppsystem/Controller'
         tags: ['controller.service_arguments']
 
+    App\SwagAppsystem\Controller\AppLifecycleEventController:
+        arguments:
+            - !tagged_iterator swag.app_lifecycle_handler
+        tags: ['controller.service_arguments']
+
     App\SwagAppsystem\ArgumentResolver\:
         resource: '../src/SwagAppsystem/ArgumentResolver'
         tags: ['controller.argument_value_resolver']
@@ -35,6 +40,10 @@ services:
         factory: ['Doctrine\DBAL\DriverManager', 'getConnection']
         arguments:
             - url: '%env(resolve:DATABASE_URL)%'
+
+    _instanceof:
+        App\SwagAppsystem\AppLifecycleHandler:
+            tags: ['swag.app_lifecycle_handler']
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
