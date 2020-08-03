@@ -1,4 +1,4 @@
-##Platform-sh
+## Platform-sh
 
 The development template is optimized for the use with [platform.sh](https://platform.sh/).  
 
@@ -6,7 +6,7 @@ With this development template in addition with platform.sh you can easily devel
 You don't need to think about the hosting and communication with the shop.  
 This will all be done by platform.sh and our controller and services. 
 
-##Getting started
+## Getting started
 
 In order to use this template for development or for production you need to configure two things.  
 
@@ -38,7 +38,7 @@ variables:
 
 These should also be changed in the `.env` to develop locally. 
 
-##Development
+## Development
 
 This is a symfony based development template.  
 To register your app you only need to configure your manifest.  
@@ -71,7 +71,7 @@ class OrderController
 
 In there you can use the `$client` to communicate with the shop or use the `$event` to get the data.
 
-##App lifecycle events
+## App lifecycle events
 
 There are five app lifecycle events which can be triggered during the lifecycle of an app.  
 The events are `app_installed`, `app_updated`, `app_deleted`, `app_activated` and `app_deactivated`.
@@ -118,7 +118,7 @@ The webhook could look like this:
 <webhook name="appLifecycleDeactivated" url="https://your-shop-url/applifecycle/deactivated" event="app_deactivated"/>
 ```
 
-##Testing
+## Testing
 
 To test your app you can use [PHPUnit](https://phpunit.de/index.html)  
 You can write your own tests in `tests`  
@@ -127,7 +127,7 @@ and execute them executing `vendor/bin/phpunit`
 To check your codestyle you can use [EasyCodingStandard](https://github.com/symplify/easy-coding-standard)  
 Just execute `vendor/bin/ecs check` to check your code or add `--fix` to also fix your code.
 
-##Deployment on platform.sh
+## Deployment on platform.sh
 
 To deploy your app on [platform.sh](platform.sh) just follow the instructions:
 * [Public GitHub repository](https://docs.platform.sh/integrations/source/github.html)
@@ -139,7 +139,7 @@ First ssh to your server: `platform ssh`
 Then run the migrations: `vendor/bin/doctrine-migrations migrations:migrate`  
 That's is. Your server is running and you can start developing your own app. 
 
-##The registration process 
+## The registration process 
 
 The registration is the most important thing in your app.  
 To handle this we have the [Registration](src/SwagAppsystem/Controller/Registration.php) controller.  
@@ -156,7 +156,7 @@ The registration will go through several steps.
 
 Now the shop is registered to the app and you can start communicating with it. 
 
-##Communicating with the shop
+## Communicating with the shop
 
 To communicate with the shop you can use the [Client](src/SwagAppsystem/Client.php).  
 The client includes all necessary functionality for communication purposes.  
@@ -169,7 +169,7 @@ If there is some functionality which isn't implemented into the client you can s
 This client has already the needed header and token to communicate with the shop.  
 Now you can perform your own requests.  
 
-##Handling events
+## Handling events
 
 In your manifest you can define your own webhooks.  
 To handle these in your app we included the [Event](src/SwagAppsystem/Event.php).  
@@ -178,7 +178,7 @@ You can use it whenever an event gets triggered.
 The event itself has all the necessary information you might need.  
 It includes the `shopUrl`, `shopId`, `appVersion` and the `eventData`.  
 
-##The argument resolver
+## The argument resolver
 
 There are two argument resolver. One for the [Client](src/SwagAppsystem/Client.php) and one for the [Event](src/SwagAppsystem/Event.php).  
 The purpose of those is to inject the [Client](src/SwagAppsystem/Client.php) and the [Event](src/SwagAppsystem/Event.php) whenever you need them.  
@@ -190,21 +190,21 @@ But how do you know that the request is from the shop and not from someone who i
 The argument resolver take care of it. Whenever you use one of them as a parameter the request will be authenticated.  
 If the request isn't authenticated the [Client](src/SwagAppsystem/Client.php) or the [Event](src/SwagAppsystem/Event.php) will be null. 
 
-##The shop repository
+## The shop repository
 
 The [ShopRepository](src/Repository/ShopRepository.php) can be used to get the secret of the shop and the [Credentials](src/SwagAppsystem/Credentials.php).  
 
 For example if you want to build your own authentication you can use the [ShopRepository](src/Repository/ShopRepository.php) to get the secret to the corresponding shop.  
 But if you want to build your own [Client](src/SwagAppsystem/Client.php) you can simply get the [Credentials](src/SwagAppsystem/Credentials.php) for a specific `shopId`.  
 
-##Infrastructure
+## Infrastructure
 
 Let's talk about the infrastructure.  
 The infrastructure is coupled to your plan which you are paying for.  
 Each resource whether it is CPU and RAM or disc space is only for one environment / cluster.  
 It is not shared between multiple environments / clusters.
 
-####CPU and RAM
+#### CPU and RAM
 
 The resources for cpu and ram are shared between all your container in the cluster.  
 If one container in your application needs much more ram than another application then you can set the resources with the `size` key.  
@@ -221,7 +221,7 @@ You need to keep in mind that the `size` key only has impact on your production 
 The key will be ignored in the development environment and will be set to `S`.  
 If you need to increase this you can do it on you plan settings page for a fee.    
 
-####Disc space
+#### Disc space
 
 Another thing you can configure is the disk space of each application and service.  
 You can also configure this in [.platform.app.yaml](.platform.app.yaml) and [services.yaml](.platform/services.yaml).
@@ -240,7 +240,7 @@ which you can give to your application or to your database.
 
 Whether you use it or not won't affect your costs.
 
-##Code quality
+## Code quality
 
 To improve your code style we added [EasyCodingStandard](https://github.com/symplify/easy-coding-standard) and for testing purposes [PHPUnit](https://phpunit.de/index.html).
 
