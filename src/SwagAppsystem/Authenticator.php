@@ -48,7 +48,7 @@ class Authenticator
         $signature = $request->headers->get('shopware-app-signature');
         $queryString = $request->getQueryString();
 
-        $hmac = \hash_hmac('sha256', $queryString, getenv('APP_SECRET'));
+        $hmac = \hash_hmac('sha256', $queryString, $_SERVER['APP_SECRET']);
 
         return hash_equals($hmac, $signature);
     }

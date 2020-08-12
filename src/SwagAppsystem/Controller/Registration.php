@@ -24,12 +24,12 @@ class Registration extends AbstractController
 
         $shopUrl = $this->getShopUrl($request);
         $shopId = $this->getShopId($request);
-        $name = getenv('APP_NAME');
+        $name = $_SERVER['APP_NAME'];
         $secret = bin2hex(random_bytes(64));
 
         $shopRepository->createShop($this->getShopId($request), $this->getShopUrl($request), $secret);
 
-        $proof = \hash_hmac('sha256', $shopId . $shopUrl . $name, getenv('APP_SECRET'));
+        $proof = \hash_hmac('sha256', $shopId . $shopUrl . $name, $_SERVER['APP_SECRET']);
         $body = ['proof' => $proof, 'secret' => $secret, 'confirmation_url' => $this->generateUrl('confirm', [], UrlGeneratorInterface::ABSOLUTE_URL)];
 
         return new JsonResponse($body);
