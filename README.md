@@ -74,7 +74,7 @@ In there you can use the `$client` to communicate with the shop or use the `$eve
 ## App lifecycle events
 
 There are five app lifecycle events which can be triggered during the lifecycle of an app.  
-The events are `app_installed`, `app_updated`, `app_deleted`, `app_activated` and `app_deactivated`.
+The events are `app.installed`, `app.updated`, `app.deleted`, `app.activated` and `app.deactivated`.
 To use this events you have to create the webhooks in your manifest.  
 If you want to implement your own code you only need to implement the [AppLifecycleHandler](src/SwagAppsystem/AppLifecycleHandler.php) interface and write your own code.  
 
