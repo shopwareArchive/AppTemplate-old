@@ -79,7 +79,7 @@ To use this events you have to create the webhooks in your manifest.
 If you want to implement your own code you only need to implement the [AppLifecycleHandler](src/SwagAppsystem/AppLifecycleHandler.php) interface and write your own code.  
 
 The `app.installed` event gets triggered each time the app gets installed.  
-This will also trigger the `app_activated` event.  
+This will also trigger the `app.activated` event.  
 At each of this both events the shop is already installed and registered at your app.  
 The webhook could look like this:
 
