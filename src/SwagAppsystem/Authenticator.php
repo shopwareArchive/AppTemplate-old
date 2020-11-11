@@ -46,7 +46,7 @@ class Authenticator
     public static function authenticateRegisterRequest(Request $request): bool
     {
         $signature = $request->headers->get('shopware-app-signature');
-        $queryString = $request->getQueryString();
+        $queryString = rawurldecode($request->getQueryString());
 
         $hmac = \hash_hmac('sha256', $queryString, $_SERVER['APP_SECRET']);
 
