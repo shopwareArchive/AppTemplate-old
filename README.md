@@ -78,7 +78,7 @@ The events are `app.installed`, `app.updated`, `app.deleted`, `app.activated` an
 To use this events you have to create the webhooks in your manifest.  
 If you want to implement your own code you only need to implement the [AppLifecycleHandler](src/SwagAppsystem/AppLifecycleHandler.php) interface and write your own code.  
 
-The `app_installed` event gets triggered each time the app gets installed.  
+The `app.installed` event gets triggered each time the app gets installed.  
 This will also trigger the `app_activated` event.  
 At each of this both events the shop is already installed and registered at your app.  
 The webhook could look like this:
@@ -87,14 +87,14 @@ The webhook could look like this:
 <webhook name="appLifecycleInstalled" url="https://your-shop-url/applifecycle/installed" event="app.installed"/>
 ```
 
-The `app_updated` event gets triggered each time a shop updated your app.  
+The `app.updated` event gets triggered each time a shop updated your app.  
 The webhook could look like this:
 
 ```xml
 <webhook name="appLifecycleUpdated" url="https://your-shop-url/applifecycle/updated" event="app.updated"/>
 ```
 
-The `app_deleted` event gets triggered each time a shop deletes your app.  
+The `app.deleted` event gets triggered each time a shop deletes your app.  
 At this point the shop is deleted using the [shopRepository](src/Repository/ShopRepository.php).  
 You should delete all shop data you have saved and stop the communication with the shop.  
 The webhook could look like this:
@@ -103,14 +103,14 @@ The webhook could look like this:
 <webhook name="appLifecycleDeleted" url="https://your-shop-url/applifecycle/deleted" event="app.deleted"/>
 ```
 
-The `app_activated` event gets triggered each time your app gets installed or activated.  
+The `app.activated` event gets triggered each time your app gets installed or activated.  
 At this point you can start the communication with the shop.  
 The webhook could look like this:
 ```xml
 <webhook name="appLifecycleActivated" url="https://your-shop-url/applifecycle/activated" event="app.activated"/>
 ```
 
-The `app_deactivated` event gets triggered each time your app gets deactivated.  
+The `app.deactivated` event gets triggered each time your app gets deactivated.  
 At this point you should stop the communication with the shop.  
 The webhook could look like this:
 
