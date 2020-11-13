@@ -4,25 +4,13 @@ namespace App\SwagAppsystem;
 
 class Event
 {
-    /**
-     * @var string
-     */
-    private $shopUrl;
+    private string $shopUrl;
 
-    /**
-     * @var string
-     */
-    private $shopId;
+    private string $shopId;
 
-    /**
-     * @var int
-     */
-    private $appVersion;
+    private int $appVersion;
 
-    /**
-     * @var array
-     */
-    private $eventData;
+    private array $eventData;
 
     public function __construct(string $shopUrl, string $shopId, int $appVersion, array $eventData)
     {

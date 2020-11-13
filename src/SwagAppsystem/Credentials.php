@@ -4,25 +4,13 @@ namespace App\SwagAppsystem;
 
 class Credentials
 {
-    /**
-     * @var string
-     */
-    private $shopUrl;
+    private string $shopUrl;
 
-    /**
-     * @var string
-     */
-    private $key;
+    private string $key;
 
-    /**
-     * @var string
-     */
-    private $secretKey;
+    private string $secretKey;
 
-    /**
-     * @var string
-     */
-    private $token;
+    private string $token;
 
     private function __construct(string $shopUrl, string $key, string $secretKey, string $token = '')
     {
@@ -57,11 +45,8 @@ class Credentials
         return $this->secretKey;
     }
 
-    /**
-     * @return string|null
-     */
-    public function getToken()
+    public function getToken(): ?string
     {
-        return $this->token ? $this->token : null;
+        return $this->token ?: null;
     }
 }

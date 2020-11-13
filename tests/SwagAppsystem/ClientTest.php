@@ -86,7 +86,9 @@ class ClientTest extends TestCase
 
     public function testWithAuthenticationHandlerStack(): void
     {
-        $authMock = new MockHandler([new Response(200, [], json_encode(['access_token' => 'token-123']))]);
+        $authMock = new MockHandler([new Response(200, [], json_encode([
+            'access_token' => 'token-123',
+        ]))]);
         $authHandlerStack = HandlerStack::create($authMock);
 
         $credentials = Credentials::fromKeys(self::SHOP_URL, 'key', 'secretKey');
@@ -138,7 +140,9 @@ class ClientTest extends TestCase
             'client_secret' => $credentials->getSecretKey(),
         ];
 
-        $authMock = new MockHandler([new Response(200, [], json_encode(['access_token' => 'token-123']))]);
+        $authMock = new MockHandler([new Response(200, [], json_encode([
+            'access_token' => 'token-123',
+        ]))]);
         $authHandlerStack = HandlerStack::create($authMock);
 
         $history = [];
@@ -187,7 +191,9 @@ class ClientTest extends TestCase
 
     public function testFetchDetail(): void
     {
-        $data = ['id' => 1];
+        $data = [
+            'id' => 1,
+        ];
         $type = 'product';
         $id = '1';
 
@@ -205,7 +211,7 @@ class ClientTest extends TestCase
         $uri = $request->getUri();
 
         static::assertEquals($data, $response);
-        static::assertEquals('https://www.test-shop.de/api/v2/product/1', (string) $uri);
+        static::assertEquals('https://www.test-shop.de/api/v3/product/1', (string) $uri);
         static::assertEquals($request->getMethod(), 'GET');
     }
 
@@ -225,9 +231,13 @@ class ClientTest extends TestCase
 
     public function testSearch(): void
     {
-        $data = ['id' => '1'];
+        $data = [
+            'id' => '1',
+        ];
         $type = 'type';
-        $criteria = ['total' => 100];
+        $criteria = [
+            'total' => 100,
+        ];
 
         $mock = new MockHandler([new Response(200, [], json_encode($data))]);
         $handlerStack = HandlerStack::create($mock);
@@ -244,7 +254,7 @@ class ClientTest extends TestCase
         $requestContent = json_decode($request->getBody()->getContents(), true);
 
         static::assertEquals($data, $response);
-        static::assertEquals('https://www.test-shop.de/api/v2/search/type', (string) $uri);
+        static::assertEquals('https://www.test-shop.de/api/v3/search/type', (string) $uri);
         static::assertEquals($request->getMethod(), 'POST');
         static::assertEquals($criteria, $requestContent);
     }
@@ -265,9 +275,13 @@ class ClientTest extends TestCase
 
     public function testSearchIds(): void
     {
-        $data = ['id' => 1];
+        $data = [
+            'id' => 1,
+        ];
         $type = 'type';
-        $criteria = ['total' => 100];
+        $criteria = [
+            'total' => 100,
+        ];
 
         $mock = new MockHandler([new Response(200, [], json_encode($data))]);
         $handlerStack = HandlerStack::create($mock);
@@ -284,7 +298,7 @@ class ClientTest extends TestCase
         $requestContent = json_decode($request->getBody()->getContents(), true);
 
         static::assertEquals($data, $response);
-        static::assertEquals('https://www.test-shop.de/api/v2/search-ids/type', (string) $uri);
+        static::assertEquals('https://www.test-shop.de/api/v3/search-ids/type', (string) $uri);
         static::assertEquals($request->getMethod(), 'POST');
         static::assertEquals($criteria, $requestContent);
     }
@@ -325,7 +339,7 @@ class ClientTest extends TestCase
         $uri = $request->getUri();
         $requestContent = json_decode($request->getBody()->getContents(), true);
 
-        static::assertEquals('https://www.test-shop.de/api/v2/product', (string) $uri);
+        static::assertEquals('https://www.test-shop.de/api/v3/product', (string) $uri);
         static::assertEquals($request->getMethod(), 'POST');
         static::assertEquals($data, $requestContent);
     }
@@ -370,7 +384,7 @@ class ClientTest extends TestCase
         $uri = $request->getUri();
         $requestContent = json_decode($request->getBody()->getContents(), true);
 
-        static::assertEquals('https://www.test-shop.de/api/v2/product/1', (string) $uri);
+        static::assertEquals('https://www.test-shop.de/api/v3/product/1', (string) $uri);
         static::assertEquals($request->getMethod(), 'PATCH');
         static::assertEquals($data, $requestContent);
     }
@@ -411,7 +425,7 @@ class ClientTest extends TestCase
         $request = $history[0]['request'];
         $uri = $request->getUri();
 
-        static::assertEquals('https://www.test-shop.de/api/v2/product/1', (string) $uri);
+        static::assertEquals('https://www.test-shop.de/api/v3/product/1', (string) $uri);
         static::assertEquals($request->getMethod(), 'DELETE');
     }
 

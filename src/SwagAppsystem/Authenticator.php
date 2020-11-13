@@ -17,14 +17,19 @@ class Authenticator
         $key = $credentials->getKey();
         $secretKey = $credentials->getSecretKey();
 
-        $authClient = new HttpClient(['base_uri' => $shopUrl, 'handler' => $handlerStack]);
+        $authClient = new HttpClient([
+            'base_uri' => $shopUrl,
+            'handler' => $handlerStack,
+        ]);
 
-        $header = ['Content-Type' => 'application/json'];
+        $header = [
+            'Content-Type' => 'application/json',
+        ];
         $authJson = json_encode([
             'grant_type' => 'client_credentials',
             'client_id' => $key,
             'client_secret' => $secretKey,
-        ]);
+        ], JSON_THROW_ON_ERROR);
 
         $auth = new GuzzleRequest('POST', '/api/oauth/token', $header, $authJson);
 
@@ -38,7 +43,7 @@ class Authenticator
             throw new AuthenticationException($shopUrl, $key, $authResponse->getBody()->getContents());
         }
 
-        $token = json_decode($authResponse->getBody()->getContents(), true)['access_token'];
+        $token = json_decode($authResponse->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR)['access_token'];
 
         return $credentials->withToken($token);
     }
@@ -46,11 +51,11 @@ class Authenticator
     public static function authenticateRegisterRequest(Request $request): bool
     {
         $signature = $request->headers->get('shopware-app-signature');
-        $queryString = rawurldecode($request->getQueryString());
+        $queryString = \rawurldecode($request->getQueryString());
 
         $hmac = \hash_hmac('sha256', $queryString, $_SERVER['APP_SECRET']);
 
-        return hash_equals($hmac, $signature);
+        return \hash_equals($hmac, $signature);
     }
 
     public static function authenticatePostRequest(Request $request, string $shopSecret): bool
@@ -63,14 +68,14 @@ class Authenticator
 
         $hmac = \hash_hmac('sha256', $request->getContent(), $shopSecret);
 
-        return hash_equals($hmac, $signature);
+        return \hash_equals($hmac, $signature);
     }
 
     public static function authenticateGetRequest(Request $request, string $shopSecret): bool
     {
         $query = $request->query->all();
 
-        $queryString = sprintf(
+        $queryString = \sprintf(
             'shop-id=%s&shop-url=%s&timestamp=%s',
             $query['shop-id'],
             urlencode($query['shop-url']),
@@ -79,6 +84,6 @@ class Authenticator
 
         $hmac = \hash_hmac('sha256', $queryString, $shopSecret);
 
-        return hash_equals($hmac, $query['shopware-shop-signature']);
+        return \hash_equals($hmac, $query['shopware-shop-signature']);
     }
 }

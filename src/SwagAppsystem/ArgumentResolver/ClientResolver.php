@@ -11,10 +11,7 @@ use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 
 class ClientResolver implements ArgumentValueResolverInterface
 {
-    /**
-     * @var ShopRepository
-     */
-    private $shopRepository;
+    private ShopRepository $shopRepository;
 
     public function __construct(ShopRepository $shopRepository)
     {
@@ -24,7 +21,7 @@ class ClientResolver implements ArgumentValueResolverInterface
     /**
      * {@inheritdoc}
      */
-    public function supports(Request $request, ArgumentMetadata $argument)
+    public function supports(Request $request, ArgumentMetadata $argument): bool
     {
         if ($argument->getType() !== Client::class) {
             return false;
@@ -37,7 +34,9 @@ class ClientResolver implements ArgumentValueResolverInterface
             $shopSecret = $this->shopRepository->getSecretByShopId($shopId);
 
             return Authenticator::authenticatePostRequest($request, $shopSecret);
-        } elseif ($request->getMethod() === 'GET' && $this->supportsGetRequest($request)) {
+        }
+
+        if ($request->getMethod() === 'GET' && $this->supportsGetRequest($request)) {
             $shopId = $request->query->get('shop-id');
             $shopSecret = $this->shopRepository->getSecretByShopId($shopId);
 
@@ -50,10 +49,10 @@ class ClientResolver implements ArgumentValueResolverInterface
     /**
      * {@inheritdoc}
      */
-    public function resolve(Request $request, ArgumentMetadata $argument)
+    public function resolve(Request $request, ArgumentMetadata $argument): \Generator
     {
         if ($request->getMethod() === 'POST') {
-            $requestContent = json_decode($request->getContent(), true);
+            $requestContent = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
             $shopId = $requestContent['source']['shopId'];
         } else {
             $shopId = $request->query->get('shop-id');
@@ -66,7 +65,7 @@ class ClientResolver implements ArgumentValueResolverInterface
 
     private function supportsPostRequest(Request $request): bool
     {
-        $requestContent = json_decode($request->getContent(), true);
+        $requestContent = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         $hasSource = $requestContent && array_key_exists('source', $requestContent);
 

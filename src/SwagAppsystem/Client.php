@@ -11,49 +11,27 @@ class Client
     /**
      * @var int
      */
-    private const DEFAULT_API_VERSION = 2;
+    private const DEFAULT_API_VERSION = 3;
 
-    /**
-     * @var Credentials
-     */
-    private $credentials;
+    private Credentials $credentials;
 
-    /**
-     * @var string
-     */
-    private $shopUrl;
+    private string $shopUrl;
 
-    /**
-     * @var array
-     */
-    private $headers;
+    private array $headers;
 
-    /**
-     * @var HandlerStack
-     */
-    private $handlerStack;
+    private ?HandlerStack $handlerStack;
 
-    /**
-     * @var HandlerStack
-     */
-    private $authenticationHandlerStack;
+    private ?HandlerStack $authenticationHandlerStack;
 
-    /**
-     * @var int
-     */
-    private $apiVersion;
+    private int $apiVersion;
 
-    /**
-     * @var HttpClient|null
-     */
-    private $httpClient = null;
+    private ?HttpClient $httpClient = null;
 
     private function __construct(Credentials $credentials, array $headers = [], int $apiVersion = null, HandlerStack $handlerStack = null, HandlerStack $authenticationHandlerStack = null)
     {
         $this->credentials = $credentials;
         $this->shopUrl = $credentials->getShopUrl();
         $this->headers = $headers;
-        $this->apiVersion = $apiVersion;
         $this->apiVersion = $apiVersion ? $apiVersion : self::DEFAULT_API_VERSION;
         $this->handlerStack = $handlerStack;
         $this->authenticationHandlerStack = $authenticationHandlerStack;
@@ -141,13 +119,15 @@ class Client
         $client = $this->getHttpClient();
         $requestPath = sprintf('/api/v%s/search/%s', $this->apiVersion, $entityType);
 
-        $response = $client->post($requestPath, ['body' => json_encode($criteria)]);
+        $response = $client->post($requestPath, [
+            'body' => json_encode($criteria, JSON_THROW_ON_ERROR),
+        ]);
 
         if ($response->getStatusCode() !== 200) {
             throw new ApiException($this->shopUrl, $requestPath, $response);
         }
 
-        return json_decode($response->getBody()->getContents(), true);
+        return json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
     }
 
     public function searchIds(string $entityType, array $criteria): array
@@ -155,13 +135,15 @@ class Client
         $client = $this->getHttpClient();
         $requestPath = sprintf('/api/v%s/search-ids/%s', $this->apiVersion, $entityType);
 
-        $response = $client->post($requestPath, ['body' => json_encode($criteria)]);
+        $response = $client->post($requestPath, [
+            'body' => json_encode($criteria, JSON_THROW_ON_ERROR),
+        ]);
 
         if ($response->getStatusCode() !== 200) {
             throw new ApiException($this->shopUrl, $requestPath, $response);
         }
 
-        return json_decode($response->getBody()->getContents(), true);
+        return json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
     }
 
     public function createEntity(string $entityType, array $entityData): void
@@ -169,7 +151,9 @@ class Client
         $client = $this->getHttpClient();
         $requestPath = sprintf('/api/v%s/%s', $this->apiVersion, $entityType);
 
-        $response = $client->post($requestPath, ['body' => json_encode($entityData)]);
+        $response = $client->post($requestPath, [
+            'body' => json_encode($entityData, JSON_THROW_ON_ERROR),
+        ]);
 
         if ($response->getStatusCode() !== 204) {
             throw new ApiException($this->shopUrl, $requestPath, $response);
@@ -181,7 +165,9 @@ class Client
         $client = $this->getHttpClient();
         $requestPath = sprintf('/api/v%s/%s/%s', $this->apiVersion, $entityType, $id);
 
-        $response = $client->patch($requestPath, ['body' => json_encode($entityData)]);
+        $response = $client->patch($requestPath, [
+            'body' => json_encode($entityData, JSON_THROW_ON_ERROR),
+        ]);
 
         if ($response->getStatusCode() !== 204) {
             throw new ApiException($this->shopUrl, $requestPath, $response);

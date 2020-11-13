@@ -4,20 +4,11 @@ namespace App\SwagAppsystem\Exception;
 
 class AuthenticationException extends \Exception
 {
-    /**
-     * @var string
-     */
-    private $shopUrl;
+    private string $shopUrl;
 
-    /**
-     * @var string
-     */
-    private $apiKey;
+    private string $apiKey;
 
-    /**
-     * @var string
-     */
-    private $reason;
+    private string $reason;
 
     public function __construct(string $shopUrl, string $apiKey, string $reason)
     {
@@ -25,9 +16,9 @@ class AuthenticationException extends \Exception
         $this->apiKey = $apiKey;
         $this->reason = $reason;
 
-        $message = sprintf('Could not authenticate with store. Shopurl: %s, apikey: %s, reason: %s', $shopUrl, $apiKey, $reason);
+        $message = \sprintf('Could not authenticate with store. Shopurl: %s, apikey: %s, reason: %s', $shopUrl, $apiKey, $reason);
 
-        parent::__construct($message, 0, null);
+        parent::__construct($message);
     }
 
     public function getShopUrl(): string

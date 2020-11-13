@@ -2,25 +2,15 @@
 
 namespace App\SwagAppsystem\Exception;
 
-use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 
-class ApiException extends \Exception
+class ApiException extends \RuntimeException
 {
-    /**
-     * @var string
-     */
-    private $requestPath;
+    private string $requestPath;
 
-    /**
-     * @var string
-     */
-    private $shopUrl;
+    private string $shopUrl;
 
-    /**
-     * @var Response
-     */
-    private $response;
+    private ResponseInterface $response;
 
     public function __construct(string $shopUrl, string $requestPath, ResponseInterface $response)
     {
@@ -43,7 +33,7 @@ class ApiException extends \Exception
         return $this->shopUrl;
     }
 
-    public function getResponse(): Response
+    public function getResponse(): ResponseInterface
     {
         return $this->response;
     }

@@ -11,7 +11,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class AppLifecycleEventController extends AbstractController
 {
-    private $handlers;
+    private iterable $handlers;
 
     public function __construct(iterable $handlers)
     {
