@@ -10,7 +10,7 @@ This will all be done by platform.sh and our controller and services.
 
 In order to use this template for development or for production you need to configure two things.  
 
-* The `APP_NAME` (the unique name of your app)
+* The `APP_NAME` (the unique name of your app, must be equal with you app folder name)
 * The `APP_SECRET` (a secret which is needed for the registration process)
 
 You need to set both of them in your `manifest.xml` but also in the [.platform.app.yaml](.platform.app.yaml).
