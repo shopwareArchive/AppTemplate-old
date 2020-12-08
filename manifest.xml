@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/master/src/Core/Framework/App/Manifest/Schema/manifest-1.0.xsd">
+    <meta>
+        <name>AppTemplate</name>
+        <label>App template</label>
+        <label lang="de-DE">App Template</label>
+        <description>Template to get started with creating an own app</description>
+        <description lang="de-DE">Template für die Erstellung einer eigenen App</description>
+        <author>shopware AG</author>
+        <copyright>(c) by shopware AG</copyright>
+        <version>1.0.0</version>
+        <license>MIT</license>
+    </meta>
+
+    <setup>
+        <registrationUrl>https://your-app.url.com/registration</registrationUrl>
+        <secret>myAppSecret</secret>
+    </setup>
+
+    <permissions>
+        <read>order</read>
+    </permissions>
+
+    <admin>
+        <action-button action="addOrderList" entity="order" view="detail" url="https://your-app-url.com/actionbutton/add/orderlist">
+            <label>Add order list</label>
+            <label lang="de-DE">Bestellliste hinzufügen</label>
+        </action-button>
+
+        <module name="orderList" source="https://your-app.url.com/iframe/orderlist">
+            <label>Order list</label>
+            <label lang="de-DE">Bestellliste</label>
+        </module>
+    </admin>
+
+    <custom-fields>
+        <custom-field-set>
+            <name>my_custom_field_set</name>
+            <label>My Custom Field Set</label>
+            <label lang="de-DE">Mein Zusatzfeld</label>
+            <related-entities>
+                <order/>
+            </related-entities>
+            <fields>
+                <bool name="active">
+                    <position>1</position>
+                    <label>Active</label>
+                    <label lang="de-DE">Aktiv</label>
+                </bool>
+
+                <text name="comment">
+                    <position>2</position>
+                    <label>Comment</label>
+                    <label lang="de-DE">Kommentar</label>
+                </text>
+            </fields>
+        </custom-field-set>
+    </custom-fields>
+
+    <webhooks>
+        <webhook name="appLifecycleDeleted" url="https://your-app.url.com/applifecycle/deleted" event="app.deleted"/>
+    </webhooks>
+
+    <cookies>
+        <cookie>
+            <snippet-name>Swoogle Analytics</snippet-name>
+            <cookie>swag.analytics</cookie>
+            <value>some_value</value>
+            <expiration>30</expiration>
+        </cookie>
+        <group>
+            <snippet-name>App Cookies</snippet-name>
+            <snippet-description>Cookies required for this app to work</snippet-description>
+            <entries>
+                <cookie>
+                    <snippet-name>Something</snippet-name>
+                    <cookie>swag.app.something</cookie>
+                </cookie>
+                <cookie>
+                    <snippet-name>Lorem ipsum</snippet-name>
+                    <cookie>swag.app.lorem-ipsum</cookie>
+                </cookie>
+            </entries>
+        </group>
+    </cookies>
+</manifest>
