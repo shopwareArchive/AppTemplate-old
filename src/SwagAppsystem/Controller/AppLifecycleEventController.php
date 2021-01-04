@@ -20,7 +20,7 @@ class AppLifecycleEventController extends AbstractController
 
     /**
      * @Route("/applifecycle/installed", name="applifecycle.installed", methods={"POST"})
-     * The event `app_installed` gets triggered each time your app gets installed.
+     * The event `app.installed` gets triggered each time your app gets installed.
      * At this point the shop is already registered.
      */
     public function appInstalled(Event $event): Response
@@ -35,7 +35,7 @@ class AppLifecycleEventController extends AbstractController
 
     /**
      * @Route("/applifecycle/updated", name="applifecycle.updated", methods={"POST"})
-     * The event `app_updated` gets triggered each time a shop updates your app.
+     * The event `app.updated` gets triggered each time a shop updates your app.
      */
     public function appUpdated(Event $event): Response
     {
@@ -49,7 +49,7 @@ class AppLifecycleEventController extends AbstractController
 
     /**
      * @Route("applifecycle/activated", name="applifecycle.activated", methods={"POST"})
-     * The event `app_activated` gets triggered each time your app gets activated.
+     * The event `app.activated` gets triggered each time your app gets activated.
      * This also happens after your app is installed.
      */
     public function appActivated(Event $event): Response
@@ -64,7 +64,7 @@ class AppLifecycleEventController extends AbstractController
 
     /**
      * @Route("/applifecycle/deactivated", name="applifecycle.deactivated", methods={"POST"})
-     * The event `app_deactivated` gets triggered each time your app gets deactivated.
+     * The event `app.deactivated` gets triggered each time your app gets deactivated.
      * This don't happen when your app gets uninstalled.
      */
     public function appDeactivated(Event $event): Response
@@ -79,7 +79,7 @@ class AppLifecycleEventController extends AbstractController
 
     /**
      * @Route("/applifecycle/deleted", name="applifecycle.deleted", methods={"POST"})
-     * The event `app_deleted` gets triggered each time your app gets uninstalled.
+     * The event `app.deleted` gets triggered each time your app gets uninstalled.
      */
     public function appDeleted(ShopRepository $shopRepository, Event $event): Response
     {
