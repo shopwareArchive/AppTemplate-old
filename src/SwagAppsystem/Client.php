@@ -54,7 +54,7 @@ class Client
         $this->shopUrl = $credentials->getShopUrl();
         $this->headers = $headers;
         $this->apiVersion = $apiVersion;
-        $this->apiVersion = $apiVersion ? $apiVersion : self::DEFAULT_API_VERSION;
+        $this->apiVersion = $apiVersion ?: self::DEFAULT_API_VERSION;
         $this->handlerStack = $handlerStack;
         $this->authenticationHandlerStack = $authenticationHandlerStack;
 
