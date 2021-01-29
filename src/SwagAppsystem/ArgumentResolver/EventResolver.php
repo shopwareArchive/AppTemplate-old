@@ -58,11 +58,7 @@ class EventResolver implements ArgumentValueResolverInterface
 
         $shopSecret = $this->shopRepository->getSecretByShopId($requestContent['source']['shopId']);
 
-        if (!Authenticator::authenticatePostRequest($request, $shopSecret)) {
-            return false;
-        }
-
-        return true;
+        return Authenticator::authenticatePostRequest($request, $shopSecret);
     }
 
     /**
