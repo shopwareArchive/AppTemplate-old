@@ -21,6 +21,7 @@
         "symfony/yaml": "*"
     },
     "require-dev": {
+        "pact-foundation/pact-php": "^7.0",
         "phpunit/phpunit": "^9.2",
         "symplify/easy-coding-standard": "^8.0"
     },

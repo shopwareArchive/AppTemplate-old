@@ -1,4 +1,4 @@
-image: composer:2.0.6
+image: docker
 
 stages:
   - Static analysis
@@ -6,13 +6,38 @@ stages:
 
 EasyCodingStandard:
   stage: Static analysis
+  extends:
+    - .base
   script:
-    - composer install --no-suggest --no-progress
-    - vendor/bin/ecs check
+    - docker exec "$(docker-compose ps -q example_app_server)" vendor/bin/ecs check
 
 Unit:
   stage: Unit
+  extends:
+    - .base
   script:
-    - composer install --no-suggest --no-progress
-    - composer dump-autoload
-    - vendor/bin/phpunit
+    - docker exec "$(docker-compose ps -q app_server)" ./psh.phar init
+    - docker exec "$(docker-compose ps -q app_server)" chown -R 1000:1000 config/jwt
+    - docker exec "$(docker-compose ps -q app_server)" bin/console app:install myAppName --activate --force
+    - docker exec "$(docker-compose ps -q example_app_server)" vendor/bin/phpunit -c dev-ops/gitlab/phpunit.xml.dist
+
+.base:
+  services:
+    - docker:dind
+  before_script:
+    - apk add --no-cache docker-compose git
+    - cd ..
+    - git clone http://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.shopware.com/shopware/6/product/development.git
+    - rm -rf development/platform
+    - git clone http://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.shopware.com/shopware/6/product/platform.git development/platform
+    - rm -rf development/docker-compose.yml
+    - cp -v shopwareapptemplate/dev-ops/gitlab/docker-compose.yml development/
+    - cp -v shopwareapptemplate/dev-ops/gitlab/.psh.yaml.override development/
+    - cd development
+    - docker-compose up -d
+    - docker exec "$(docker-compose ps -q example_app_server)" composer install
+    - rm -rf ../shopwareapptemplate/.env
+    - mv ../shopwareapptemplate/dev-ops/gitlab/.env ../shopwareapptemplate/.env
+    - docker exec "$(docker-compose ps -q example_app_server)" bin/console doctrine:database:create
+    - docker exec "$(docker-compose ps -q example_app_server)" bin/console doctrine:migrations:migrate --no-interaction
+    - cp -r ../shopwareapptemplate/dev-ops/myAppName ../development/custom/apps

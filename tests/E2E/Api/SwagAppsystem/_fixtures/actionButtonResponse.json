@@ -1,0 +1,19 @@
+{
+  "source": {
+    "url": "http:\/\/shopware",
+    "appVersion": "1.0.0",
+    "shopId": "SSPD1otFyLz33fgz"
+  },
+  "data": {
+    "ids": [
+      "9ea011a581f54f2690e23127bc728e46"
+    ],
+    "entity": "order",
+    "action": "orderActionButtonTest"
+  },
+  "meta": {
+    "timestamp": 1615805785,
+    "reference": "35ea7e96c15d4aabb8d07cc065c8a48b",
+    "language": "2fbb5fe2e29a4d70aa5854ce7ce3e20b"
+  }
+}

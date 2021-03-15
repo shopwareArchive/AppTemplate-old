@@ -9,11 +9,6 @@ use GuzzleHttp\HandlerStack;
 class Client
 {
     /**
-     * @var int
-     */
-    private const DEFAULT_API_VERSION = 2;
-
-    /**
      * @var Credentials
      */
     private $credentials;
@@ -39,22 +34,15 @@ class Client
     private $authenticationHandlerStack;
 
     /**
-     * @var int
-     */
-    private $apiVersion;
-
-    /**
      * @var HttpClient|null
      */
     private $httpClient = null;
 
-    private function __construct(Credentials $credentials, array $headers = [], int $apiVersion = null, HandlerStack $handlerStack = null, HandlerStack $authenticationHandlerStack = null)
+    private function __construct(Credentials $credentials, array $headers = [], HandlerStack $handlerStack = null, HandlerStack $authenticationHandlerStack = null)
     {
         $this->credentials = $credentials;
         $this->shopUrl = $credentials->getShopUrl();
         $this->headers = $headers;
-        $this->apiVersion = $apiVersion;
-        $this->apiVersion = $apiVersion ?: self::DEFAULT_API_VERSION;
         $this->handlerStack = $handlerStack;
         $this->authenticationHandlerStack = $authenticationHandlerStack;
 
@@ -72,36 +60,31 @@ class Client
     {
         $this->headers['languageId'] = $languageId;
 
-        return new self($this->credentials, $this->headers, $this->apiVersion, $this->handlerStack, $this->authenticationHandlerStack);
+        return new self($this->credentials, $this->headers, $this->handlerStack, $this->authenticationHandlerStack);
     }
 
     public function withInheritance(bool $inheritance): Client
     {
         $this->headers['inheritance'] = $inheritance;
 
-        return new self($this->credentials, $this->headers, $this->apiVersion, $this->handlerStack, $this->authenticationHandlerStack);
+        return new self($this->credentials, $this->headers, $this->handlerStack, $this->authenticationHandlerStack);
     }
 
     public function withHeader(array $header): Client
     {
         $this->headers = array_merge($this->headers, $header);
 
-        return new self($this->credentials, $this->headers, $this->apiVersion, $this->handlerStack, $this->authenticationHandlerStack);
+        return new self($this->credentials, $this->headers, $this->handlerStack, $this->authenticationHandlerStack);
     }
 
     public function withHandlerStack(HandlerStack $handlerStack): Client
     {
-        return new self($this->credentials, $this->headers, $this->apiVersion, $handlerStack, $this->authenticationHandlerStack);
+        return new self($this->credentials, $this->headers, $handlerStack, $this->authenticationHandlerStack);
     }
 
     public function withAuthenticationHandlerStack(HandlerStack $authenticationHandlerStack): Client
     {
-        return new self($this->credentials, $this->headers, $this->apiVersion, $this->handlerStack, $authenticationHandlerStack);
-    }
-
-    public function withApiVersion(int $apiVersion): Client
-    {
-        return new self($this->credentials, $this->headers, $apiVersion, $this->handlerStack, $this->authenticationHandlerStack);
+        return new self($this->credentials, $this->headers, $this->handlerStack, $authenticationHandlerStack);
     }
 
     public function getHttpClient(): HttpClient
@@ -125,7 +108,7 @@ class Client
     public function fetchDetail(string $entityType, string $id): array
     {
         $client = $this->getHttpClient();
-        $requestPath = sprintf('/api/v%s/%s/%s', $this->apiVersion, $entityType, $id);
+        $requestPath = sprintf('/api/%s/%s', $entityType, $id);
 
         $response = $client->get($requestPath);
 
@@ -139,7 +122,7 @@ class Client
     public function search(string $entityType, array $criteria): array
     {
         $client = $this->getHttpClient();
-        $requestPath = sprintf('/api/v%s/search/%s', $this->apiVersion, $entityType);
+        $requestPath = sprintf('/api/search/%s', $entityType);
 
         $response = $client->post($requestPath, ['body' => json_encode($criteria)]);
 
@@ -153,7 +136,7 @@ class Client
     public function searchIds(string $entityType, array $criteria): array
     {
         $client = $this->getHttpClient();
-        $requestPath = sprintf('/api/v%s/search-ids/%s', $this->apiVersion, $entityType);
+        $requestPath = sprintf('/api/search-ids/%s', $entityType);
 
         $response = $client->post($requestPath, ['body' => json_encode($criteria)]);
 
@@ -167,7 +150,7 @@ class Client
     public function createEntity(string $entityType, array $entityData): void
     {
         $client = $this->getHttpClient();
-        $requestPath = sprintf('/api/v%s/%s', $this->apiVersion, $entityType);
+        $requestPath = sprintf('/api/%s', $entityType);
 
         $response = $client->post($requestPath, ['body' => json_encode($entityData)]);
 
@@ -179,7 +162,7 @@ class Client
     public function updateEntity(string $entityType, string $id, array $entityData): void
     {
         $client = $this->getHttpClient();
-        $requestPath = sprintf('/api/v%s/%s/%s', $this->apiVersion, $entityType, $id);
+        $requestPath = sprintf('/api/%s/%s', $entityType, $id);
 
         $response = $client->patch($requestPath, ['body' => json_encode($entityData)]);
 
@@ -191,7 +174,7 @@ class Client
     public function deleteEntity(string $entityType, string $id): void
     {
         $client = $this->getHttpClient();
-        $requestPath = sprintf('/api/v%s/%s/%s', $this->apiVersion, $entityType, $id);
+        $requestPath = sprintf('/api/%s/%s', $entityType, $id);
 
         $response = $client->delete($requestPath);
 
