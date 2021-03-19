@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/master/src/Core/Framework/App/Manifest/Schema/manifest-1.0.xsd">
+    <meta>
+        <name>{{ APP_NAME }}</name>
+        <label>Swag Example App</label>
+        <label lang="de-DE">Swag Beispiel App</label>
+        <description>Example App</description>
+        <description lang="de-DE">Beispiel App</description>
+        <author>shopware AG</author>
+        <copyright>(c) by shopware AG</copyright>
+        <version>1.0.0</version>
+        <license>MIT</license>
+    </meta>
+
+    <setup>
+        <registrationUrl>{{ APP_URL_BACKEND }}/registration</registrationUrl>
+        <secret>{{ APP_SECRET }}</secret>
+    </setup>
+
+    <admin>
+        <action-button action="addOrderList" entity="order" view="detail" url="{{ APP_URL_BACKEND }}/actionbutton/add/orderlist">
+            <label>Add order list</label>
+            <label lang="de-DE">Bestellliste hinzufügen</label>
+        </action-button>
+
+        <module name="orderList" source="{{ APP_URL_CLIENT }}/iframe/orderlist">
+            <label>Order list</label>
+            <label lang="de-DE">Bestellliste</label>
+        </module>
+    </admin>
+
+    <permissions>
+        <create>state_machine_history</create>
+        <read>order</read>
+        <update>order</update>
+        <read>order_line_item</read>
+        <read>state_machine_state</read>
+    </permissions>
+
+    <custom-fields>
+        <custom-field-set>
+            <name>swag_orderlist</name>
+            <label>Order list</label>
+            <related-entities>
+                <order/>
+            </related-entities>
+            <fields>
+                <text-area name="order-list">
+                    <position>1</position>
+                    <label>Order list</label>
+                    <label lang="de-DE">Bestellliste</label>
+                </text-area>
+            </fields>
+        </custom-field-set>
+    </custom-fields>
+
+    <webhooks>
+        <webhook name="checkoutOrderPlaced" url="{{ APP_URL_BACKEND }}/hooks/order/placed" event="checkout.order.placed"/>
+        <webhook name="appLifecycleDeleted" url="{{ APP_URL_BACKEND }}/applifecycle/deleted" event="app.deleted"/>
+    </webhooks>
+</manifest>

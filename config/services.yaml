@@ -27,6 +27,10 @@ services:
         resource: '../src/SwagAppsystem/Controller'
         tags: ['controller.service_arguments']
 
+    App\SwagAppsystem\Command\:
+        resource: '../src/SwagAppsystem/Command'
+        tags: ['console.command']
+
     App\SwagAppsystem\Controller\AppLifecycleEventController:
         arguments:
             - !tagged_iterator swag.app_lifecycle_handler

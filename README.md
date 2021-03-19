@@ -38,6 +38,15 @@ variables:
 
 These should also be changed in the `.env` to develop locally. 
 
+## Create the manifest.xml
+To easily create `manifest.xml`-files you can use the `bin/console app:create-manifest` command.  
+This command will generate a manifest from the [template](templates/manifest-template.xml).  
+For testing purposes this is the default manifest template from our example app.  
+In there you can use `{{ APP_NAME }}`,`{{ APP_SECRET }}`,`{{ APP_URL_CLIENT }}` and `{{ APP_URL_BACKEND }}` which will get replaced by the values configured in your `.env`.  
+Further more you can use your own variables like `{{ MY_OWN_VARIABLE }}` and declare them when executing the command like this `bin/console app:create-manifest MY_OWN_VARIABLE=MY_OWN_VARIABLE_VALUE`.  
+This allows you to easily change URL's in your `manifest.xml` without changing the `.env` file.  
+The generated `manifest.xml` can be found in `build/dev`.  
+
 ## Development
 
 This is a symfony based development template.  
@@ -430,3 +439,43 @@ In order to access the Shopware admin you should run `./psh.phar administration:
 Due to the fact that the aliases for your app server only work inside the docker container, you need to change it in the `manifest.xml`.  
 In contrast to every other action, like webhooks or action buttons, iframes need to be accessible from outside the docker container.  
 For this purpose iframes are the only thing in your `manifest.xml` where you need to set the source to `http://localhost:7777` as defined in the `development/docker-compose.yml`. 
+
+## Local development with Platform.sh
+#### Forwarding requests
+
+In order to register your local Shopware instance to your app on Platform.sh you need to be able to connect from Platform.sh to your client.  
+To do so, just forward the request from your app to your local Shopware instance. This can be done with port forwarding.  
+This means that every request which is addressed to `localhost:8000` on your app will be forwarded to your defined port to your client.  
+But why should your app send requests to itself? This happens when your app wants to communicate with your local Shopware instance which should run on `localhost:8000`.  
+Then your app will send each request to `localhost:8000` which then should get forwarded to your client to the port where Shopware is running on.  
+
+####But how does this work in practice?
+
+To accomplish this, just copy the command from Platform.sh which can be found in the top right corner and paste it into your terminal.  
+This should look something like this `ssh abcde12345-master-12345--app@ssh.de-2-platform.sh`.  
+To make the authentication much easier we recommend installing the [Platform.sh cli](https://docs.platform.sh/development/cli.html) and log in into your project.  
+
+To redirect the requests we need to add the option `-R` with a few parameters to the copied Platform.sh command.  
+First we define the port on the remote server which should be forwarded to us. In our case this is port `8000`.  
+The second parameter is the destination on your client. This will be your local Shopware instance which is running on `localhost:8000`.  
+If you put everything together this should look something like this `ssh -R 8000:localhost:8000 abcde12345-master-12345--app@ssh.de-2-platform.sh`.  
+The last thing you have to do is to change all URLs in your `manifest.xml` to point to your Platform.sh URL and you are done.  
+For further information have a look at [remote forwarding](https://www.ssh.com/ssh/tunneling/example). 
+
+#### Switching between Platform.sh and local development
+
+The best way to switch from Platform.sh to your local setup and vice versa is to have two `manifest.xml` files.  
+Just create the first one for your Platform.sh setup with
+`bin/console app:create-manifest APP_NAME=PlatformshSetup APP_URL_CLIENT=https://your-client-url.platform.sh APP_URL_BACKEND=https://your-backend-url.platform.sh`
+and the other one for your local setup with  
+`bin/console app:create-manifest APP_NAME=LocalSetup APP_URL_CLIENT=http://localhost/your-local-client-url APP_URL_BACKEND=http://localhost/your-local-backend-url`
+Then place them in `development/custom/apps/your-app-name/manifest.xml` and you are good to go.  
+
+Once you switch to local development you have to make sure to change your `APP_URL` of your Shopware instance in your `development/.psh.yaml.override` back to `http://localhost:8000`.
+This can be done as follows:
+```yaml
+const:
+  APP_URL: "http://localhost:8000"
+```
+And vice versa change it to `http://shopware` for development with Platform.sh.  
+After changing your `APP_URL` you need to execute `bin/console app:url-change:resolve`. More about this [here](https://docs.shopware.com/en/shopware-platform-dev-en/app-system-guide/setup#detecting-app-url-changes).
