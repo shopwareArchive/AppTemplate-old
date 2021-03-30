@@ -14,7 +14,7 @@
 
     <setup>
         <registrationUrl>http://your-backend-url.com/registration</registrationUrl>
-        <secret>$ecretf0rt3st</secret>
+        <secret>secretf0rt3st</secret>
     </setup>
 
     <admin>

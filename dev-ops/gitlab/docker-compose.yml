@@ -1,0 +1,68 @@
+version: '3.7'
+
+networks:
+  shopware:
+  appSystem:
+  development:
+
+services:
+  app_server:
+    image: shopware/development:7.4-composer-2
+    networks:
+      shopware:
+        aliases:
+          - docker.vm
+      development:
+        aliases:
+          - shopware
+    extra_hosts:
+      - "docker.vm:127.0.0.1"
+    volumes:
+      - "../development:/app"
+      - ~/.composer:/.composer
+    tmpfs:
+      - /tmp:mode=1777
+
+  example_app_server:
+    image: shopware/development:7.4-composer-2
+    volumes:
+      - "../shopwareapptemplate:/app"
+      - "~/.composer:/.composer"
+    environment:
+      CONTAINER_UID: 1000
+      APPLICATION_UID: 1000
+      APPLICATION_GID: 1000
+    ports:
+      - "127.0.0.1:7777:8000"
+      - "127.0.0.1:5000:8000"
+    networks:
+      appSystem:
+      development:
+        aliases:
+          - example
+
+  example_mysql:
+    build: dev-ops/docker/containers/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+    ports:
+      - "5506:3306"
+    volumes:
+      - ./dev-ops/docker/_volumes/mysql-example:/mysql-data
+    networks:
+      appSystem:
+        aliases:
+          - appmysql
+
+  app_mysql:
+    build: dev-ops/docker/containers/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+    networks:
+      shopware:
+        aliases:
+          - mysql

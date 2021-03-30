@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/master/src/Core/Framework/App/Manifest/Schema/manifest-1.0.xsd">
+    <meta>
+        <name>myAppName</name>
+        <label>Swag Example App</label>
+        <label lang="de-DE">Swag Beispiel App</label>
+        <description>Example App</description>
+        <description lang="de-DE">Beispiel App</description>
+        <author>shopware AG</author>
+        <copyright>(c) by shopware AG</copyright>
+        <version>1.0.0</version>
+        <license>MIT</license>
+    </meta>
+
+    <admin>
+        <action-button action="orderActionButtonTest" entity="order" view="detail" url="http://example:5000/actionbutton/order">
+            <label>Add order list</label>
+            <label lang="de-DE">Bestellliste hinzufügen</label>
+        </action-button>
+    </admin>
+
+    <setup>
+        <registrationUrl>http://example/registration</registrationUrl> <!-- replace local url with real one -->
+        <secret>myAppSecret</secret>
+    </setup>
+
+    <permissions>
+        <create>product</create>
+        <read>product</read>
+        <update>product</update>
+        <delete>product</delete>
+        <read>tax</read>
+        <read>currency</read>
+    </permissions>
+
+    <webhooks>
+        <webhook name="productWritten" url="http://example:5000/product/written" event="product.written"/>
+    </webhooks>
+</manifest>

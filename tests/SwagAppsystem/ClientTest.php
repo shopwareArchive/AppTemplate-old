@@ -6,26 +6,51 @@ use App\SwagAppsystem\Client;
 use App\SwagAppsystem\Credentials;
 use App\SwagAppsystem\Exception\ApiException;
 use App\SwagAppsystem\Exception\AuthenticationException;
+use App\Tests\E2E\Traits\ContractTestTrait;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use PhpPact\Consumer\InteractionBuilder;
+use PhpPact\Consumer\Model\ConsumerRequest;
+use PhpPact\Consumer\Model\ProviderResponse;
 use PHPUnit\Framework\TestCase;
 
 class ClientTest extends TestCase
 {
-    private const SHOP_URL = 'https://www.test-shop.de';
+    use ContractTestTrait;
 
+    /**
+     * @var Client
+     */
     private $client;
 
+    /**
+     * @var Credentials
+     */
     private $credentials;
+
+    /**
+     * @var string[]
+     */
+    private $defaultHeaders;
 
     public function setUp(): void
     {
-        $credentials = Credentials::fromKeys('https://www.test-shop.de', 'key', 'secretKey');
-        $this->credentials = $credentials->withToken('token');
+        $randomString = bin2hex(random_bytes(64));
+        $credentials = Credentials::fromKeys((string) $this->getServerConfig()->getBaseUri(), $randomString, $randomString);
+        $this->credentials = $credentials->withToken($randomString);
 
         $this->client = Client::fromCredentials($this->credentials);
+        $this->defaultHeaders = [
+            'Authorization' => 'Bearer ' . $this->credentials->getToken(),
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ];
+    }
+
+    public function tearDown(): void
+    {
+        $this->stopServer();
     }
 
     public function testGetClientFromCredentials(): void
@@ -65,7 +90,7 @@ class ClientTest extends TestCase
         $httpClient = $client->getHttpClient();
 
         foreach ($headers as $header => $headerValue) {
-            static::assertContains($headerValue, $httpClient->getConfig('headers'));
+            static::assertContainsEquals($headerValue, $httpClient->getConfig('headers'));
             static::assertEquals($headerValue, $httpClient->getConfig('headers')[$header]);
         }
     }
@@ -89,36 +114,13 @@ class ClientTest extends TestCase
         $authMock = new MockHandler([new Response(200, [], json_encode(['access_token' => 'token-123']))]);
         $authHandlerStack = HandlerStack::create($authMock);
 
-        $credentials = Credentials::fromKeys(self::SHOP_URL, 'key', 'secretKey');
+        $credentials = Credentials::fromKeys((string) $this->getServerConfig()->getBaseUri(), 'key', 'secretKey');
         $client = Client::fromCredentials($credentials);
         $client = $client->withAuthenticationHandlerStack($authHandlerStack);
         $httpClient = $client->getHttpClient();
 
         $headers = $httpClient->getConfig('headers');
-
         static::assertEquals('Bearer token-123', $headers['Authorization']);
-    }
-
-    public function testWithApiVersion(): void
-    {
-        $mock = new MockHandler([new Response(200, [], json_encode(['123']))]);
-        $mockHandler = HandlerStack::create($mock);
-
-        $history = [];
-        $historyMiddleware = Middleware::history($history);
-        $mockHandler->push($historyMiddleware);
-
-        $credentials = $this->credentials->withToken('token');
-
-        $client = Client::fromCredentials($credentials);
-        $client = $client->withHandlerStack($mockHandler);
-        $client = $client->withApiVersion(1);
-        $client->fetchDetail('product', '1');
-
-        $request = $history[0]['request'];
-        $uri = $request->getUri();
-
-        static::assertEquals('https://www.test-shop.de/api/v1/product/1', (string) $uri);
     }
 
     public function testGetHttpClientFromToken(): void
@@ -126,307 +128,428 @@ class ClientTest extends TestCase
         $httpClient = $this->client->getHttpClient();
         $uri = $httpClient->getConfig('base_uri');
 
-        static::assertEquals(self::SHOP_URL, (string) $uri);
+        static::assertEquals((string) $this->getServerConfig()->getBaseUri(), (string) $uri);
     }
 
     public function testGetHttpClientFromKeys(): void
     {
-        $credentials = Credentials::fromKeys(self::SHOP_URL, 'key', 'secretKey');
-        $body = [
-            'grant_type' => 'client_credentials',
-            'client_id' => $credentials->getKey(),
-            'client_secret' => $credentials->getSecretKey(),
-        ];
+        $credentials = Credentials::fromKeys((string) $this->getServerConfig()->getBaseUri(), $this->credentials->getKey(), $this->credentials->getSecretKey());
 
-        $authMock = new MockHandler([new Response(200, [], json_encode(['access_token' => 'token-123']))]);
-        $authHandlerStack = HandlerStack::create($authMock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setHeaders(['Content-Type' => 'application/json'])
+            ->setPath('/api/oauth/token')
+            ->setBody([
+                'grant_type' => 'client_credentials',
+                'client_id' => $credentials->getKey(),
+                'client_secret' => $credentials->getSecretKey(),
+            ]);
 
-        $history = [];
-        $historyMiddleware = Middleware::history($history);
-        $authHandlerStack->push($historyMiddleware);
+        $token = 'token-123';
+        $response = new ProviderResponse();
+        $response
+            ->setStatus(200)
+            ->setBody(['access_token' => $token]);
+
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/oauth/token get httpClient from keys')
+            ->with($request)
+            ->willRespondWith($response);
 
         $client = Client::fromCredentials($credentials);
-        $client = $client->withAuthenticationHandlerStack($authHandlerStack);
+
         $httpClient = $client->getHttpClient();
+        static::assertTrue($builder->verify());
 
-        $request = $history[0]['request'];
-        $authRequestUri = $request->getUri();
-
-        static::assertEquals('https://www.test-shop.de/api/oauth/token', (string) $authRequestUri);
-        static::assertEquals('POST', $request->getMethod());
-        static::assertEquals($body, json_decode($request->getBody()->getContents(), true));
+        static::assertEquals('Bearer ' . $token, $httpClient->getConfig()['headers']['Authorization']);
     }
 
     public function testGetHttpClientInvalidKeysException(): void
     {
-        $authMock = new MockHandler([new Response(403)]);
-        $authHandlerStack = HandlerStack::create($authMock);
+        $credentials = Credentials::fromKeys((string) $this->getServerConfig()->getBaseUri(), $this->credentials->getKey(), $this->credentials->getSecretKey());
 
-        $credentials = Credentials::fromKeys(self::SHOP_URL, 'key', 'secretKey');
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setHeaders(['Content-Type' => 'application/json'])
+            ->setPath('/api/oauth/token')
+            ->setBody([
+                'grant_type' => 'client_credentials',
+                'client_id' => $credentials->getKey(),
+                'client_secret' => $credentials->getSecretKey(),
+            ]);
+
+        $response = new ProviderResponse();
+        $response->setStatus(403);
+
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/oauth/token get httpClient invalid keys exception')
+            ->with($request)
+            ->willRespondWith($response);
 
         $client = Client::fromCredentials($credentials);
-        $client = $client->withAuthenticationHandlerStack($authHandlerStack);
 
         static::expectException(AuthenticationException::class);
         $client->getHttpClient();
+        static::assertTrue($builder->verify());
     }
 
     public function testGetHttpClientAuthException(): void
     {
-        $authMock = new MockHandler([new Response(204)]);
-        $authHandlerStack = HandlerStack::create($authMock);
+        $credentials = Credentials::fromKeys((string) $this->getServerConfig()->getBaseUri(), $this->credentials->getKey(), $this->credentials->getSecretKey());
 
-        $credentials = Credentials::fromKeys(self::SHOP_URL, 'key', 'secretKey');
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setHeaders(['Content-Type' => 'application/json'])
+            ->setPath('/api/oauth/token')
+            ->setBody([
+                'grant_type' => 'client_credentials',
+                'client_id' => $credentials->getKey(),
+                'client_secret' => $credentials->getSecretKey(),
+            ]);
+
+        $response = new ProviderResponse();
+        $response->setStatus(204);
+
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/oauth/token get httpClient authentication exception')
+            ->with($request)
+            ->willRespondWith($response);
 
         $client = Client::fromCredentials($credentials);
-        $client = $client->withAuthenticationHandlerStack($authHandlerStack);
 
         static::expectException(AuthenticationException::class);
         $client->getHttpClient();
+        static::assertTrue($builder->verify());
     }
 
     public function testFetchDetail(): void
     {
-        $data = ['id' => 1];
-        $type = 'product';
-        $id = '1';
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('GET')
+            ->setPath('/api/product/1')
+            ->setHeaders($this->defaultHeaders);
 
-        $mock = new MockHandler([new Response(200, [], json_encode($data))]);
-        $handlerStack = HandlerStack::create($mock);
+        $product = ['detail' => 'foobar'];
+        $response = new ProviderResponse();
+        $response
+            ->setStatus(200)
+            ->setBody($product);
 
-        $history = [];
-        $historyMiddleware = Middleware::history($history);
-        $handlerStack->push($historyMiddleware);
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('GET /api/product/1 fetch detail')
+            ->with($request)
+            ->willRespondWith($response);
 
-        $client = $this->client->withHandlerStack($handlerStack);
-        $response = $client->fetchDetail($type, $id);
+        $result = $this->client->fetchDetail('product', '1');
+        static::assertTrue($builder->verify());
 
-        $request = $history[0]['request'];
-        $uri = $request->getUri();
-
-        static::assertEquals($data, $response);
-        static::assertEquals('https://www.test-shop.de/api/v2/product/1', (string) $uri);
-        static::assertEquals($request->getMethod(), 'GET');
+        static::assertEquals($product, $result);
     }
 
     public function testFetchDetailException(): void
     {
-        $type = 'type';
-        $id = '1';
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('GET')
+            ->setPath('/api/product/1')
+            ->setHeaders($this->defaultHeaders);
 
-        $mock = new MockHandler([new Response(204)]);
-        $handlerStack = HandlerStack::create($mock);
+        $response = new ProviderResponse();
+        $response->setStatus(204);
 
-        $client = $this->client->withHandlerStack($handlerStack);
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('GET /api/product/1 fetch detail exception')
+            ->with($request)
+            ->willRespondWith($response);
 
         static::expectException(ApiException::class);
-        $client->fetchDetail($type, $id);
+        $this->client->fetchDetail('product', '1');
+        static::assertTrue($builder->verify());
     }
 
     public function testSearch(): void
     {
-        $data = ['id' => '1'];
-        $type = 'type';
         $criteria = ['total' => 100];
 
-        $mock = new MockHandler([new Response(200, [], json_encode($data))]);
-        $handlerStack = HandlerStack::create($mock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setPath('/api/search/product')
+            ->setHeaders($this->defaultHeaders)
+            ->setBody($criteria);
 
-        $history = [];
-        $historyMiddleware = Middleware::history($history);
-        $handlerStack->push($historyMiddleware);
+        $product = ['id' => '1'];
+        $response = new ProviderResponse();
+        $response
+            ->setStatus(200)
+            ->setBody($product);
 
-        $client = $this->client->withHandlerStack($handlerStack);
-        $response = $client->search($type, $criteria);
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/search/product search')
+            ->with($request)
+            ->willRespondWith($response);
 
-        $request = $history[0]['request'];
-        $uri = $request->getUri();
-        $requestContent = json_decode($request->getBody()->getContents(), true);
+        $result = $this->client->search('product', $criteria);
+        static::assertTrue($builder->verify());
 
-        static::assertEquals($data, $response);
-        static::assertEquals('https://www.test-shop.de/api/v2/search/type', (string) $uri);
-        static::assertEquals($request->getMethod(), 'POST');
-        static::assertEquals($criteria, $requestContent);
+        static::assertEquals($result, $product);
     }
 
     public function testSearchException(): void
     {
-        $type = 'type';
-        $criteria = [];
+        $criteria = ['total' => 100];
 
-        $mock = new MockHandler([new Response(204)]);
-        $handlerStack = HandlerStack::create($mock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setPath('/api/search/product')
+            ->setHeaders($this->defaultHeaders)
+            ->setBody($criteria);
 
-        $client = $this->client->withHandlerStack($handlerStack);
+        $response = new ProviderResponse();
+        $response->setStatus(204);
+
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/search/product search exception')
+            ->with($request)
+            ->willRespondWith($response);
 
         static::expectException(ApiException::class);
-        $client->search($type, $criteria);
+        $this->client->search('product', $criteria);
+        static::assertTrue($builder->verify());
     }
 
     public function testSearchIds(): void
     {
-        $data = ['id' => 1];
-        $type = 'type';
         $criteria = ['total' => 100];
 
-        $mock = new MockHandler([new Response(200, [], json_encode($data))]);
-        $handlerStack = HandlerStack::create($mock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setPath('/api/search-ids/product')
+            ->setHeaders($this->defaultHeaders)
+            ->setBody($criteria);
 
-        $history = [];
-        $historyMiddleware = Middleware::history($history);
-        $handlerStack->push($historyMiddleware);
+        $product = ['id' => '1'];
+        $response = new ProviderResponse();
+        $response
+            ->setStatus(200)
+            ->setBody($product);
 
-        $client = $this->client->withHandlerStack($handlerStack);
-        $response = $client->searchIds($type, $criteria);
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/search-ids/product search ids')
+            ->with($request)
+            ->willRespondWith($response);
 
-        $request = $history[0]['request'];
-        $uri = $request->getUri();
-        $requestContent = json_decode($request->getBody()->getContents(), true);
+        $result = $this->client->searchIds('product', $criteria);
+        static::assertTrue($builder->verify());
 
-        static::assertEquals($data, $response);
-        static::assertEquals('https://www.test-shop.de/api/v2/search-ids/type', (string) $uri);
-        static::assertEquals($request->getMethod(), 'POST');
-        static::assertEquals($criteria, $requestContent);
+        static::assertEquals($product, $result);
     }
 
     public function testSearchIdsException(): void
     {
-        $type = 'type';
-        $criteria = [];
+        $criteria = ['total' => 100];
 
-        $mock = new MockHandler([new Response(204)]);
-        $handlerStack = HandlerStack::create($mock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setPath('/api/search-ids/product')
+            ->setHeaders($this->defaultHeaders)
+            ->setBody($criteria);
 
-        $client = $this->client->withHandlerStack($handlerStack);
+        $response = new ProviderResponse();
+        $response->setStatus(204);
+
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/search-ids/product search ids exception')
+            ->with($request)
+            ->willRespondWith($response);
 
         static::expectException(ApiException::class);
-        $client->searchIds($type, $criteria);
+        $this->client->searchIds('product', $criteria);
+        static::assertTrue($builder->verify());
     }
 
     public function testCreateEntity(): void
     {
-        $type = 'product';
         $data = [
             'name' => 'test product',
             'productNumber' => 'SW1000',
         ];
 
-        $mock = new MockHandler([new Response(204)]);
-        $handlerStack = HandlerStack::create($mock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setPath('/api/product')
+            ->setHeaders($this->defaultHeaders)
+            ->setBody($data);
 
-        $history = [];
-        $historyMiddleware = Middleware::history($history);
-        $handlerStack->push($historyMiddleware);
+        $response = new ProviderResponse();
+        $response->setStatus(204);
 
-        $client = $this->client->withHandlerStack($handlerStack);
-        $client->createEntity($type, $data);
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/product create entity')
+            ->with($request)
+            ->willRespondWith($response);
 
-        $request = $history[0]['request'];
-        $uri = $request->getUri();
-        $requestContent = json_decode($request->getBody()->getContents(), true);
-
-        static::assertEquals('https://www.test-shop.de/api/v2/product', (string) $uri);
-        static::assertEquals($request->getMethod(), 'POST');
-        static::assertEquals($data, $requestContent);
+        $this->client->createEntity('product', $data);
+        static::assertTrue($builder->verify());
     }
 
     public function testCreateEntityException(): void
     {
-        $type = 'product';
         $data = [
             'name' => 'test product',
             'productNumber' => 'SW1000',
         ];
 
-        $mock = new MockHandler([new Response(202)]);
-        $handlerStack = HandlerStack::create($mock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('POST')
+            ->setPath('/api/product')
+            ->setHeaders($this->defaultHeaders)
+            ->setBody($data);
 
-        $client = $this->client->withHandlerStack($handlerStack);
+        $response = new ProviderResponse();
+        $response->setStatus(202);
+
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('POST /api/product create entity exception')
+            ->with($request)
+            ->willRespondWith($response);
 
         static::expectException(ApiException::class);
-        $client->createEntity($type, $data);
+        $this->client->createEntity('product', $data);
+        static::assertTrue($builder->verify());
     }
 
     public function testUpdateEntity(): void
     {
-        $type = 'product';
-        $id = '1';
         $data = [
             'name' => 'test product',
             'productNumber' => 'SW1000',
         ];
 
-        $mock = new MockHandler([new Response(204)]);
-        $handlerStack = HandlerStack::create($mock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('PATCH')
+            ->setPath('/api/product/1')
+            ->setHeaders($this->defaultHeaders)
+            ->setBody($data);
 
-        $history = [];
-        $historyMiddleware = Middleware::history($history);
-        $handlerStack->push($historyMiddleware);
+        $response = new ProviderResponse();
+        $response->setStatus(204);
 
-        $client = $this->client->withHandlerStack($handlerStack);
-        $client->updateEntity($type, $id, $data);
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('PATCH /api/product/1 update entity')
+            ->with($request)
+            ->willRespondWith($response);
 
-        $request = $history[0]['request'];
-        $uri = $request->getUri();
-        $requestContent = json_decode($request->getBody()->getContents(), true);
-
-        static::assertEquals('https://www.test-shop.de/api/v2/product/1', (string) $uri);
-        static::assertEquals($request->getMethod(), 'PATCH');
-        static::assertEquals($data, $requestContent);
+        $this->client->updateEntity('product', '1', $data);
+        static::assertTrue($builder->verify());
     }
 
     public function testUpdateEntityException(): void
     {
-        $type = 'product';
-        $id = '1';
         $data = [
             'name' => 'test product',
             'productNumber' => 'SW1000',
         ];
 
-        $mock = new MockHandler([new Response(202)]);
-        $handlerStack = HandlerStack::create($mock);
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('PATCH')
+            ->setPath('/api/product/1')
+            ->setHeaders($this->defaultHeaders)
+            ->setBody($data);
 
-        $client = $this->client->withHandlerStack($handlerStack);
+        $response = new ProviderResponse();
+        $response->setStatus(202);
+
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('PATCH /api/product/1 update entity exception')
+            ->with($request)
+            ->willRespondWith($response);
 
         static::expectException(ApiException::class);
-        $client->updateEntity($type, $id, $data);
+        $this->client->updateEntity('product', '1', $data);
+        static::assertTrue($builder->verify());
     }
 
     public function testDeleteEntity(): void
     {
-        $type = 'product';
-        $id = '1';
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('DELETE')
+            ->setPath('/api/product/1')
+            ->setHeaders($this->defaultHeaders);
 
-        $mock = new MockHandler([new Response(204)]);
-        $handlerStack = HandlerStack::create($mock);
+        $response = new ProviderResponse();
+        $response->setStatus(204);
 
-        $history = [];
-        $historyMiddleware = Middleware::history($history);
-        $handlerStack->push($historyMiddleware);
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('DELETE /api/product/1 delete entity')
+            ->with($request)
+            ->willRespondWith($response);
 
-        $client = $this->client->withHandlerStack($handlerStack);
-        $client->deleteEntity($type, $id);
-
-        $request = $history[0]['request'];
-        $uri = $request->getUri();
-
-        static::assertEquals('https://www.test-shop.de/api/v2/product/1', (string) $uri);
-        static::assertEquals($request->getMethod(), 'DELETE');
+        $this->client->deleteEntity('product', '1');
+        static::assertTrue($builder->verify());
     }
 
     public function testDeleteEntityException(): void
     {
-        $type = 'product';
-        $id = '1';
+        $request = new ConsumerRequest();
+        $request
+            ->setMethod('DELETE')
+            ->setPath('/api/product/1')
+            ->setHeaders($this->defaultHeaders);
 
-        $mock = new MockHandler([new Response(202)]);
-        $handlerStack = HandlerStack::create($mock);
+        $response = new ProviderResponse();
+        $response->setStatus(202);
 
-        $client = $this->client->withHandlerStack($handlerStack);
+        $this->startServer();
+        $builder = new InteractionBuilder($this->getServerConfig());
+        $builder
+            ->uponReceiving('DELETE /api/product/1 delete entity exception')
+            ->with($request)
+            ->willRespondWith($response);
 
         static::expectException(ApiException::class);
-        $client->deleteEntity($type, $id);
+        $this->client->deleteEntity('product', '1');
+        static::assertTrue($builder->verify());
     }
 
     public function testBuildClient(): void
@@ -446,11 +569,10 @@ class ClientTest extends TestCase
 
         $headers = $httpClient->getConfig('headers');
         $uri = $httpClient->getConfig('base_uri');
-        $url = sprintf('%s://%s', $uri->getScheme(), $uri->getHost());
 
-        static::assertEquals($expectedUrl, $url);
+        static::assertEquals($expectedUrl, (string) $uri);
         foreach ($expectedHeaders as $header) {
-            static::assertContains($header, $headers);
+            static::assertContainsEquals($header, $headers);
         }
     }
 }

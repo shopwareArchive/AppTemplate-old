@@ -1,0 +1,26 @@
+{
+  "data": {
+    "payload": [
+      {
+        "entity": "product",
+        "operation": "update",
+        "primaryKey": "a056f57453a141c2afd7edb976004011",
+        "updatedFields": [
+          "versionId",
+          "parentVersionId",
+          "productManufacturerVersionId",
+          "cmsPageVersionId",
+          "updatedAt",
+          "id",
+          "name"
+        ]
+      }
+    ],
+    "event": "product.written"
+  },
+  "source": {
+    "url": "http:\/\/shopware",
+    "appVersion": "1.0.0",
+    "shopId": "0FVra48NYhZgrC8N"
+  }
+}
