@@ -69,16 +69,16 @@ class Authenticator
     public static function authenticateGetRequest(Request $request, string $shopSecret): bool
     {
         $query = $request->query->all();
+        $shopSignature = $query['shopware-shop-signature'];
 
-        $queryString = sprintf(
-            'shop-id=%s&shop-url=%s&timestamp=%s',
-            $query['shop-id'],
-            $query['shop-url'],
-            $query['timestamp']
-        );
+        unset($query['shopware-shop-signature']);
+        array_walk($query, function (&$value, $key) {
+            $value = "{$key}={$value}";
+        });
+        $queryString = implode('&', $query);
 
         $hmac = \hash_hmac('sha256', $queryString, $shopSecret);
 
-        return hash_equals($hmac, $query['shopware-shop-signature']);
+        return hash_equals($hmac, $shopSignature);
     }
 }
