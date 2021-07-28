@@ -72,10 +72,7 @@ class Authenticator
         $shopSignature = $query['shopware-shop-signature'];
 
         unset($query['shopware-shop-signature']);
-        array_walk($query, function (&$value, $key) {
-            $value = "{$key}={$value}";
-        });
-        $queryString = implode('&', $query);
+        $queryString = http_build_query($query);
 
         $hmac = \hash_hmac('sha256', $queryString, $shopSecret);
 
